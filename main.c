@@ -3,12 +3,14 @@
 typedef unsigned long QueueElem; 
 typedef struct 
 { 
- QueueElem *v; // pointer to the queue buffer unsigned int capacity; // queue capacity 
+ QueueElem *v; // pointer to the queue buffer unsigned 
+ int capacity; // queue capacity 
  unsigned int first; // head of the queue 
- unsigned int last; // tail of the queue sem_t empty; // semaphores and mutex for implementing the 
+ unsigned int last; // tail of the queue 
+ sem_t empty; // semaphores and mutex for implementing the 
  sem_t full; // producer-consumer paradigm 
  pthread_mutex_t mutex; 
-} CircularQueue; 
+} CircularQueue;
  
 //------------------------------------------------------------------------------------------ 
 // Allocates space for circular queue 'q' having 'capacity' number of elements 
@@ -31,16 +33,37 @@ void queue_init(CircularQueue **q, unsigned int capacity) // TO DO: change retur
 //------------------------------------------------------------------------------------------ 
 // Inserts 'value' at the tail of queue 'q' 
  
+int isFull(CircularQueue *q)
+{
+	 return((q->last+1)%q->capacity==q->last);
+}
+
 void queue_put(CircularQueue *q, QueueElem value) 
-{ 
- // TO DO BY STUDENTS } 
- 
-//------------------------------------------------------------------------------------------ 
-// Removes element at the head of queue 'q' and returns its 'value' 
+{  
+	if(isfullqueue(q))
+      printf("queue overflow\n");
+   else{
+      q->last=(q->last+1)%q->capacity;
+      q->v[q->last]=x;
+      if(q->first == 0) {
+         q->first=q->last;
+      }
+   }
+}
  
 QueueElem queue_get(CircularQueue *q) 
 { 
- // TO DO BY STUDENTS 
+	QueueElem data;
+
+  
+      data=q->v[q->first];
+      if(q->first==q->last)
+         q->first=q->last=0;
+      else
+         q->first=(q->first+1)%q->capacity;
+ 
+
+   return data;
 } 
  
 //------------------------------------------------------------------------------------------ 
