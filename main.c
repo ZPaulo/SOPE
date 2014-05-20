@@ -17,7 +17,7 @@ typedef struct
 // TO DO BY STUDENTS: ADD ERROR TESTS TO THE CALLS & RETURN a value INDICATING (UN)SUCESS 
  
 void queue_init(CircularQueue **q, unsigned int capacity) // TO DO: change return value 
-{ //cenas
+{ //cenas 2
  *q = (CircularQueue *) malloc(sizeof(CircularQueue)); 
  sem_init(&((*q)->empty), 0, capacity); 
  sem_init(&((*q)->full), 0, 0); 
