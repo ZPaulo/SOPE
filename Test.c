@@ -114,7 +114,7 @@ void *filter(void *arg)
   		queue_destroy(arg);
   		queue_put(q, 0);
   		
-  		primes[pos++] = newPrime;
+  		primes[pos++] = newPrime; // discutir possibilidade de chamar uma funçao encarregue de fazer isto com o acrescimo de fazer lhe lock com mutexes
 	}
  	return NULL;
 }
