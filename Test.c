@@ -10,16 +10,25 @@ void *start(void *arg);
 int* primes;
 int pos;
 int N;
+pthread_mutex_t mutex;
 
 int compare(const void * a, const void * b) 
 {
  return (*(int*) a - *(int*) b);
 }
 
+void insertPrime(QueueElem newPrime)
+{
+	pthread_mutex_lock(&mutex); 
+	primes[pos++] = newPrime;
+	pthread_mutex_unlock(&mutex); 
+}
+
 int main(int argc, char *argv[]) 
 {
  N = strtol(argv[1], NULL, 0);
  int nprimes = N * log(n);
+ pthread_mutex_init(&mutex, NULL); 
 
  primes = (int*) malloc(sizeof(int) * nprimes);
  pos = 0;
@@ -44,7 +53,7 @@ int main(int argc, char *argv[])
 void *start(void *arg) 
 {
 
- primes[pos++] = 2;
+ insertPrime(2);
  if (N > 2) 
  {
   pthread_t f;
@@ -61,7 +70,7 @@ void *start(void *arg)
   }
   queue_put(q, 0);
 
-  //queue_destroy(q); acho que fica melhor a nova thread destruir a queue que lhe passam, assim esta so e destruida quando ja ninguem lhe ta a fazer acessos
+ 
  }
  else
  {
@@ -76,13 +85,13 @@ void *filter(void *arg)
 	QueueElem newPrime = queue_get(arg);
 	if(newPrime > (int) (sqrt(N)))
 	{
-		 primes[pos++] = newPrime;
+		insertPrime(newPrime);
 		 newPrime = queue_get(arg);
 		 if(newPrime != 0)
 		 {
 		 	do
 		 	{
-		 		primes[pos++] = newPrime;
+		 		insertPrime(newPrime);
 		 		newPrime = queue_get(arg);
 
 		 	}while(newPrime != 0);
@@ -114,7 +123,7 @@ void *filter(void *arg)
   		queue_destroy(arg);
   		queue_put(q, 0);
   		
-  		primes[pos++] = newPrime; // discutir possibilidade de chamar uma funçao encarregue de fazer isto com o acrescimo de fazer lhe lock com mutexes
+  		insertPrime(newPrime);
 	}
  	return NULL;
 }
