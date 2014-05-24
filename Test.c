@@ -1,45 +1,120 @@
+#include <pthread.h>
+#include <stdio.h>
+#include <math.h>
 #include "Queue.c"
-#define QUEUE_SIZE 10 
-
-void *func1(void *arg);
-void *func2(void *arg);
-
-CircularQueue *q; 
 
 
-void main(int argc, char *argv[])
+void *filter(void *arg);
+void *start(void *arg);
+
+int* primes;
+int pos;
+int N;
+
+int compare(const void * a, const void * b) 
 {
-	pthread_t thrd1,thrd2;
-	int t1,t2;
-	char *msg1 = "First Thread";
-	char *msg2 = "Second thread";
-	queue_init(&q,QUEUE_SIZE); 
-	for(i = 0;i < QUEUE_SIZE; i++)
-	{
-		queue_put(q, (QueueElem) 1);
-	}
-
-	t1 = pthread_create(&thrd1,	NULL, func1,(void *) msg1);
-	t2 = pthread_create(&thrd2,	NULL, func2,(void *) msg2);
-
-pthread_join(thrd1,NULL);
-pthread_join(thrd2,NULL);
-
-return 0;
+ return (*(int*) a - *(int*) b);
 }
 
-void *func1(void *arg)
+int main(int argc, char *argv[]) 
 {
-	int i;
-	for(i = 0;i < QUEUE_SIZE; i++)
-	{
-		printf("Inserting\n");
-	queue_put(q, (QueueElem) i);
-	}
-	
+ N = strtol(argv[1], NULL, 0);
+ int nprimes = N * log(n);
+
+ primes = (int*) malloc(sizeof(int) * nprimes);
+ pos = 0;
+
+ pthread_t f;
+ char *msg1 = "First Filter";
+
+ pthread_create(&f, NULL, start, (void *) msg1);
+
+ qsort(primes, nprimes, sizeof(int), compare);
+
+ while (primes != '\0') 
+ {
+  printf("%d\n", *primes++);
+ }
+ free(primes);
+
+ return 0;
+
 }
-void *func2(void *arg);
+
+void *start(void *arg) 
 {
-	printf("%d\n", queue_get(q));
-	printf("%d\n", queue_get(q));
+
+ primes[pos++] = 2;
+ if (N > 2) 
+ {
+  pthread_t f;
+
+  CircularQueue *q;
+  queue_init(&q, QUEUE_SIZE);
+
+  pthread_create(&f, NULL, filter, q);
+
+  int i = 3;
+  while (i < N) {
+   queue_put(q, i);
+   i += 2;
+  }
+  queue_put(q, 0);
+
+  //queue_destroy(q); acho que fica melhor a nova thread destruir a queue que lhe passam, assim esta so e destruida quando ja ninguem lhe ta a fazer acessos
+ }
+ else
+ {
+
+ }
+
+ return NULL;
+}
+
+void *filter(void *arg) 
+{
+	QueueElem newPrime = queue_get(arg);
+	if(newPrime > (int) (sqrt(N)))
+	{
+		 primes[pos++] = newPrime;
+		 newPrime = queue_get(arg);
+		 if(newPrime != 0)
+		 {
+		 	do
+		 	{
+		 		primes[pos++] = newPrime;
+		 		newPrime = queue_get(arg);
+
+		 	}while(newPrime != 0);
+		 }
+		 	//semaforo
+		 
+	}
+	else
+	{
+		CircularQueue *q; 
+		queue_init(&q, QUEUE_SIZE);
+		
+
+		pthread_t f;
+  		pthread_create(&f, NULL, filter, q);
+
+		QueueElem nonMult = queue_get(arg);
+  		if(nonMult != 0)
+  		{
+  			do
+  			{
+  				if( nonMult % newPrime != 0)
+  					queue_put(q, nonMult);
+
+  				nonMult = queue_get(arg);
+  			}while(nonMult != 0);
+
+  		}
+  		queue_destroy(arg);
+  		queue_put(q, 0);
+  		
+  		primes[pos++] = newPrime;
+	}
+ 	return NULL;
 }
