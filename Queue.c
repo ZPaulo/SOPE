@@ -1,5 +1,8 @@
-// Type of the circular queue elements 
- 
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+ #include <semaphore.h>
+
 typedef unsigned long QueueElem; 
 typedef struct 
 { 
@@ -19,7 +22,7 @@ typedef struct
 // TO DO BY STUDENTS: ADD ERROR TESTS TO THE CALLS & RETURN a value INDICATING (UN)SUCESS 
  
 void queue_init(CircularQueue **q, unsigned int capacity) // TO DO: change return value 
-{ //cenas 2
+{ 
  *q = (CircularQueue *) malloc(sizeof(CircularQueue)); 
  sem_init(&((*q)->empty), 0, capacity); 
  sem_init(&((*q)->full), 0, 0); 
@@ -33,36 +36,33 @@ void queue_init(CircularQueue **q, unsigned int capacity) // TO DO: change retur
 //------------------------------------------------------------------------------------------ 
 // Inserts 'value' at the tail of queue 'q' 
  
-int isFull(CircularQueue *q)
-{
-	 return((q->last+1)%q->capacity==q->last);
-}
-
 void queue_put(CircularQueue *q, QueueElem value) 
 {  
-	if(isfullqueue(q))
-      printf("queue overflow\n");
-   else{
+	
+   pthread_mutex_lock(&(q->mutex)); 
+sem_wait(&(q->empty));
       q->last=(q->last+1)%q->capacity;
       q->v[q->last]=x;
-      if(q->first == 0) {
+      if(q->first == 0) 
          q->first=q->last;
-      }
-   }
+   sem_post(&(q->full));
+   pthread_mutex_unlock(&(q->mutex)); 
 }
  
 QueueElem queue_get(CircularQueue *q) 
 { 
-	QueueElem data;
+	pthread_mutex_lock(&(q->mutex)); 
+   QueueElem data;
 
-  
+  sem_wait(&(q->full));
       data=q->v[q->first];
       if(q->first==q->last)
          q->first=q->last=0;
       else
          q->first=(q->first+1)%q->capacity;
  
-
+      sem_post(&(q->empty));
+      pthread_mutex_unlock(&(q->mutex)); 
    return data;
 } 
  
@@ -72,6 +72,12 @@ QueueElem queue_get(CircularQueue *q)
  
 void queue_destroy(CircularQueue *q) 
 { 
- // TO DO BY STUDENTS 
+   pthread_mutex_lock(&(q->mutex)); 
+   free(q->v);
+   
+   sem_destroy(&(q->empty));
+   sem_destroy(&(q->full));
+      pthread_mutex_unlock(&(q->mutex)); 
+      pthread_mutex_destroy(&(q->mutex));
 } 
 //
