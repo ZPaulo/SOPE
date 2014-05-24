@@ -14,6 +14,10 @@ void main(int argc, char *argv[])
 	char *msg1 = "First Thread";
 	char *msg2 = "Second thread";
 	queue_init(&q,QUEUE_SIZE); 
+	for(i = 0;i < QUEUE_SIZE; i++)
+	{
+		queue_put(q, (QueueElem) 1);
+	}
 
 	t1 = pthread_create(&thrd1,	NULL, func1,(void *) msg1);
 	t2 = pthread_create(&thrd2,	NULL, func2,(void *) msg2);
@@ -26,9 +30,13 @@ return 0;
 
 void *func1(void *arg)
 {
-	printf("Inserting\n");
-	queue_put(q, (QueueElem) 1);
-	queue_put(q, (QueueElem) 2);  
+	int i;
+	for(i = 0;i < QUEUE_SIZE; i++)
+	{
+		printf("Inserting\n");
+	queue_put(q, (QueueElem) i);
+	}
+	
 }
 void *func2(void *arg);
 {
