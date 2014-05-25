@@ -20,16 +20,25 @@ typedef struct {
 // Initializes indexes of the head and tail of the queue
 // TO DO BY STUDENTS: ADD ERROR TESTS TO THE CALLS & RETURN a value INDICATING (UN)SUCESS
 
-int queue_init(CircularQueue **q, unsigned int capacity) // TO DO: change return value
+int queue_init(CircularQueue **q, unsigned int capacity)
 {
 	*q = (CircularQueue *) malloc(sizeof(CircularQueue));
-	sem_init(&((*q)->empty), 0, capacity);
-	sem_init(&((*q)->full), 0, 0);
-	pthread_mutex_init(&((*q)->mutex), NULL);
+
+	int error;
+	if(error = sem_init(&((*q)->empty), 0, capacity))
+		return error;
+
+	if(error = sem_init(&((*q)->full), 0, 0))
+		return error;
+
+	if(error = pthread_mutex_init(&((*q)->mutex), NULL))
+		return error;
+
 	(*q)->v = (QueueElem *) malloc(capacity * sizeof(QueueElem));
 	(*q)->capacity = capacity;
 	(*q)->first = 0;
 	(*q)->last = 0;
+	
 	return 0;
 }
 
