@@ -1,3 +1,5 @@
+#include <asm-generic/errno-base.h>
+#include <errno.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdio.h>
@@ -14,31 +16,29 @@ typedef struct {
 	pthread_mutex_t mutex;
 } CircularQueue;
 
-//------------------------------------------------------------------------------------------
-// Allocates space for circular queue 'q' having 'capacity' number of elements
-// Initializes semaphores & mutex needed to implement the producer-consumer paradigm
-// Initializes indexes of the head and tail of the queue
-// TO DO BY STUDENTS: ADD ERROR TESTS TO THE CALLS & RETURN a value INDICATING (UN)SUCESS
-
-int queue_init(CircularQueue **q, unsigned int capacity)
+int queue_init(CircularQueue **q, unsigned int capacity) // TO DO: change return value
 {
 	*q = (CircularQueue *) malloc(sizeof(CircularQueue));
 
-	int error;
-	if(error = sem_init(&((*q)->empty), 0, capacity))
-		return error;
+	if (sem_init(&((*q)->empty), 0, capacity) != 0) {
+		perror("Queue empty semaphore creation error");
+		exit(errno);
+	}
 
-	if(error = sem_init(&((*q)->full), 0, 0))
-		return error;
+	if (sem_init(&((*q)->full), 0, 0) != 0) {
+		perror("Queue full semaphore creation error");
+		exit(errno);
+	}
 
-	if(error = pthread_mutex_init(&((*q)->mutex), NULL))
-		return error;
+	if(pthread_mutex_init(&((*q)->mutex), NULL)!=0){
+		perror("Queue mutex creation error");
+		exit(errno);
+	}
 
 	(*q)->v = (QueueElem *) malloc(capacity * sizeof(QueueElem));
 	(*q)->capacity = capacity;
 	(*q)->first = 0;
 	(*q)->last = 0;
-	
 	return 0;
 }
 

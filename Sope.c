@@ -13,9 +13,10 @@ void *start(void *arg);
 QueueElem* primes;
 int pos;
 int N;
-pthread_mutex_t mutex;
-sem_t final;
 int end;
+pthread_mutex_t mutex;
+pthread_attr_t attr; // variavel com os atributos
+sem_t final;
 
 int compare(const void * a, const void * b) {
 	return (*(int*) a - *(int*) b);
@@ -28,26 +29,25 @@ void insertPrime(QueueElem newPrime) {
 }
 
 int main(int argc, char *argv[]) {
-
-	int i;
-
 	if (argc != 2) {
 		printf("Usage: ./primes n\n");
 		exit(E2BIG);
 	}
+
+	int i;
 	for (i = 0; argv[1][i] != '\0'; ++i) {
-		if(argv[1][i]<'0' || argv[1][i]>'9')
-		{
-			printf("Number must be a value!\n");
+		if (argv[1][i] < '0' || argv[1][i] > '9') {
+			printf("Argument must be a number!\n");
 			exit(EINVAL);
 		}
 	}
+
 	N = strtol(argv[1], NULL, 0);
-	if(N<2)
-	{
+	if (N < 2) {
 		printf("Number must be atleast 2!(no primes lower than that)\n");
-		exit(ERANGE);
+		exit(EDOM);
 	}
+
 	int nprimes = ceil(1.2 * (N / log(N))) + 1;
 	sem_init(&final, 1, end);
 	pthread_mutex_init(&mutex, NULL);
@@ -55,10 +55,12 @@ int main(int argc, char *argv[]) {
 	primes = (QueueElem*) malloc(sizeof(QueueElem) * nprimes);
 	end = pos = 0;
 
-	pthread_t f;
-	char *msg1 = "First Filter";
 
-	pthread_create(&f, NULL, start, (void *) msg1);
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
+	pthread_t f;
+	pthread_create(&f, &attr, start, NULL);
 
 	sem_wait(&final);
 	sem_destroy(&final);
@@ -86,7 +88,7 @@ void *start(void *arg) {
 		CircularQueue *q;
 		queue_init(&q, QUEUE_SIZE);
 
-		pthread_create(&f, NULL, filter, q);
+		pthread_create(&f, &attr, filter, q);
 
 		QueueElem i = 3;
 		while (i <= N) {
@@ -118,7 +120,7 @@ void *filter(void *arg) {
 		queue_init(&q, QUEUE_SIZE);
 
 		pthread_t f;
-		pthread_create(&f, NULL, filter, q);
+		pthread_create(&f, &attr, filter, q);
 		QueueElem nonMult;
 		while ((nonMult = queue_get(arg)) != 0) {
 			if ((nonMult % newPrime) != 0) {
